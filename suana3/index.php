@@ -128,7 +128,18 @@ while ($row = mysqli_fetch_assoc($result)) {
     <button type="submit">Search</button>
 
 </form>
-
+<a href="report.php"
+style="
+display:inline-block;
+padding:10px 20px;
+background:#4169E1;
+color:white;
+text-decoration:none;
+border-radius:4px;
+margin-left:300px;
+">
+Reports
+</a>
 <p>
 <a href="add.php"
 style="
@@ -176,10 +187,13 @@ border-radius:4px;
 
     <td><?= htmlspecialchars($row['supplier_name']) ?></td>
 
-    <td>
+       <td>
     <a href="edit.php?id=<?= $row['product_id'] ?>" 
        style="color: #2196F3; text-decoration: none; margin-right: 10px;">Edit</a>
-    </td>
+    <a href="delete.php?id=<?= $row['product_id'] ?>" 
+       style="color: #f44336; text-decoration: none;"
+       onclick="return confirm('Delete this product?')">Delete</a>
+</td>
 
 </tr>
 
