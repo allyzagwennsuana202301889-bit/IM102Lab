@@ -44,81 +44,14 @@ ORDER BY s.supplier_name ASC
 <head>
     <title>Inventory Reports</title>
     <link rel="stylesheet" href="style.css">
-
-    <style>
-        body{
-            font-family: Arial, sans-serif;
-            background:#f5f5f5;
-            margin:0;
-            padding:20px;
-        }
-
-        .container{
-            max-width:1200px;
-            margin:auto;
-        }
-
-        h1,h2{
-            text-align:center;
-        }
-
-        .cards{
-            display:flex;
-            gap:20px;
-            margin-bottom:30px;
-            flex-wrap:wrap;
-        }
-
-        .card{
-            flex:1;
-            min-width:200px;
-            background:white;
-            padding:20px;
-            border-radius:10px;
-            box-shadow:0 2px 5px rgba(0,0,0,0.1);
-            text-align:center;
-        }
-
-        table{
-            width:100%;
-            border-collapse:collapse;
-            background:white;
-            margin-bottom:40px;
-        }
-
-        th{
-            background:#333;
-            color:white;
-        }
-
-        th,td{
-            border:1px solid #ddd;
-            padding:10px;
-            text-align:center;
-        }
-
-        tr:nth-child(even){
-            background:#f9f9f9;
-        }
-    </style>
 </head>
 
 <body>
 
 <div class="container">
 
-    <h1>Inventory Reports</h1>
-<a href="index.php"
-style="
-display:inline-block;
-padding:10px 20px;
-background:#4169E1;
-color:white;
-text-decoration:none;
-border-radius:4px;
-">
-Home
-</a>
+    <h1 class ="inventory">Inventory Reports</h1>
+<a href="index.php"><button class ="index">Home</button></a>
     <div class="cards">
 
         <div class="card">

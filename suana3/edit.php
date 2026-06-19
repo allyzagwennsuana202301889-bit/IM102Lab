@@ -60,44 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html>
 <head>
     <title>Edit Product</title>
-
-    <style>
-        body{
-            font-family:Arial;
-            margin:20px;
-        }
-
-        .container{
-            max-width:500px;
-            margin:auto;
-            background:white;
-            padding:20px;
-            border-radius:8px;
-        }
-
-        label{
-            display:block;
-            margin-top:10px;
-            font-weight:bold;
-        }
-
-        input,
-        textarea,
-        select{
-            width:100%;
-            padding:10px;
-            box-sizing:border-box;
-        }
-
-        button{
-            margin-top:15px;
-            padding:10px 20px;
-        }
-
-        .cancel{
-            margin-left:10px;
-        }
-    </style>
+    <link rel="stylesheet" href="style2.css">
 </head>
 
 <body>
@@ -169,8 +132,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     </select>
 
-    <button type="submit">Update Product</button>
-    <a href="index.php" class="cancel">Cancel</a>
+    <button type="submit" class ="update">Update Product</button>
+    <a href="index.php"><button class="cancel">Cancel</button></a>
 
 </form>
 

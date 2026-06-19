@@ -125,34 +125,14 @@ while ($row = mysqli_fetch_assoc($result)) {
 
     </select>
 
-    <button type="submit">Search</button>
+    <button type="submit" class ="search">Search</button>
 
 </form>
-<a href="report.php"
-style="
-display:inline-block;
-padding:10px 20px;
-background:#4169E1;
-color:white;
-text-decoration:none;
-border-radius:4px;
-margin-left:300px;
-">
-Reports
-</a>
-<p>
-<a href="add.php"
-style="
-display:inline-block;
-padding:10px 20px;
-background:#4CAF50;
-color:white;
-text-decoration:none;
-border-radius:4px;
-">
-+ Add Product
-</a>
-</p>
+
+<div class= pages>
+<a href="report.php"><button class ="report">Reports</button></a>
+<a href="add.php"><button class ="prod"> + Add Product </button> </a>
+</div>
 
 </div>
 
@@ -187,13 +167,12 @@ border-radius:4px;
 
     <td><?= htmlspecialchars($row['supplier_name']) ?></td>
 
-       <td>
-    <a href="edit.php?id=<?= $row['product_id'] ?>" 
-       style="color: #2196F3; text-decoration: none; margin-right: 10px;">Edit</a>
-    <a href="delete.php?id=<?= $row['product_id'] ?>" 
-       style="color: #f44336; text-decoration: none;"
-       onclick="return confirm('Delete this product?')">Delete</a>
-</td>
+    <td>
+    <div class ="actions">
+    <a href="edit.php?id=<?= $row['product_id'] ?>" ><button class="edit" >Edit</button></a>
+    <a href="delete.php?id=<?= $row['product_id'] ?>" onclick="return confirm('Delete this product?')" ><button class="del">Delete</button></a>
+    </div>
+    </td>
 
 </tr>
 
