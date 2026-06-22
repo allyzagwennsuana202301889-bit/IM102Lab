@@ -1,0 +1,42 @@
+body {
+    display: flex;
+    justify-content: center;   /* horizontal center */
+    align-items: center;       /* vertical center */
+    min-height: 100vh;         /* gives body full screen height */
+    margin: 0;                 /* removes default body margin */
+    background: #f5f0eb;       
+}
+
+.container {
+    max-width: 600px;
+    width: 100%;               /* allows shrinking on small screens */
+    padding: 50px;
+    background: #ece0d1;
+    border-radius: 12px;      
+    box-shadow: 0 8px 30px rgba(0,0,0,0.1);  
+}
+
+input {
+    width: 100%;
+    padding: 12px 18px;
+    font-size: 16px;
+    border: 1px solid #d4c4b0;    /* optional: softer border */
+    border-radius: 6px;            /* optional: matches button */
+    background: #fff;
+    box-sizing: border-box;          /* ensures padding doesn't overflow */
+}
+
+button {
+    padding: 12px 28px;              /* slightly larger for balance */
+    background: #6F4E37;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.2s;     /* smooth hover */
+}
+
+button:hover {
+    background: #5a3f2d;             /* darker on hover */
+}
