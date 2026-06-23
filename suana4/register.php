@@ -20,14 +20,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $errors[] = "Username cannot exceed 50 characters.";
     }
 
- 
+
     if (empty($email)) {
         $errors[] = "Email address is required.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = "Please enter a valid email address.";
     }
 
- 
+
     if (empty($password)) {
         $errors[] = "Password is required.";
     } elseif (strlen($password) < 6) {
@@ -44,34 +44,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if (empty($errors)) {
 
-        $stmt = $pdo->prepare(
-            "SELECT id FROM users
-             WHERE username = :username
-             OR email = :email"
-        );
+        $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
+        $stmt->bind_param("ss", $username, $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-        $stmt->execute([
-            'username' => $username,
-            'email' => $email
-        ]);
+        if ($result->fetch_assoc()) {
 
-        if ($stmt->fetch()) {
+            $checkUser = $conn->prepare("SELECT id FROM users WHERE username = ?");
+            $checkUser->bind_param("s", $username);
+            $checkUser->execute();
+            $userResult = $checkUser->get_result();
 
-            $checkUser = $pdo->prepare(
-                "SELECT id FROM users WHERE username = :username"
-            );
-            $checkUser->execute(['username' => $username]);
-
-            if ($checkUser->fetch()) {
+            if ($userResult->fetch_assoc()) {
                 $errors[] = "That username is already taken.";
             }
 
-            $checkEmail = $pdo->prepare(
-                "SELECT id FROM users WHERE email = :email"
-            );
-            $checkEmail->execute(['email' => $email]);
+            $checkEmail = $conn->prepare("SELECT id FROM users WHERE email = ?");
+            $checkEmail->bind_param("s", $email);
+            $checkEmail->execute();
+            $emailResult = $checkEmail->get_result();
 
-            if ($checkEmail->fetch()) {
+            if ($emailResult->fetch_assoc()) {
                 $errors[] = "That email address is already registered.";
             }
         }
@@ -81,18 +75,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-        $stmt = $pdo->prepare(
-            "INSERT INTO users
-            (username, email, password_hash)
-            VALUES
-            (:username, :email, :password_hash)"
+        $stmt = $conn->prepare(
+            "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)"
         );
-
-        $stmt->execute([
-            'username' => $username,
-            'email' => $email,
-            'password_hash' => $passwordHash
-        ]);
+        $stmt->bind_param("sss", $username, $email, $passwordHash);
+        $stmt->execute();
 
         $success = "Registration successful!";
     }
@@ -147,6 +134,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <br><br>
 
     <button type="submit">Register</button>
+    <button type="button" class="logs" onclick="window.location.href='login.php'">Log In</button>
 
 </form>
 </div>
