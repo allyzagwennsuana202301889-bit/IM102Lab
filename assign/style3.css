@@ -1,0 +1,45 @@
+body{
+            font-family:Arial;
+            margin:20px;
+            background:#dbc1ac ;
+        }
+
+        .container{
+            max-width:500px;
+            margin:auto;
+            background:white;
+            padding:20px;
+            border-radius:8px;
+        }
+
+        label{
+            display:block;
+            margin-top:10px;
+            font-weight:bold;
+        }
+
+        input,
+        textarea,
+        select{
+            width:100%;
+            padding:10px;
+            box-sizing:border-box;
+        }
+
+        button{
+            margin-top:15px;
+            padding:10px 20px;
+            border: none;
+            border-radius: 4px;
+        }
+
+        .cancel{
+            margin-left:10px;
+            background-color: #b38c63;
+            color:white;
+        }
+
+        .update,.add{
+            background-color: #3B2F2F;
+            color: white;
+        }
