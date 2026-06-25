@@ -3,7 +3,6 @@ require_once 'config.php';
 require_once 'auth.php';
 
 requireLogin();
-requireAdmin();  // BLOCKS STAFF COMPLETELY
 
 $message = "";
 
@@ -18,6 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stock = (int) $_POST['stock'];
     $category = (int) $_POST['category_id'];
     $supplier = (int) $_POST['supplier_id'];
+    $added_by = (int) $_SESSION['user_id'];
 
     if (
         empty($name) ||
@@ -31,9 +31,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
 
         $sql = "INSERT INTO products
-                (product_name, description, price, stock, category_id, supplier_id)
+                (product_name, description, price, stock, category_id, supplier_id, added_by)
                 VALUES
-                ('$name', '$description', $price, $stock, $category, $supplier)";
+                ('$name', '$description', $price, $stock, $category, $supplier, $added_by)";
 
         if ($conn->query($sql)) {
             header("Location: index.php");

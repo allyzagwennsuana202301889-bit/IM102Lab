@@ -7,21 +7,42 @@ requireAdmin();
 
 $message = "";
 
-// Handle role toggle
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_role'])) {
+// Handle edit user
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_user'])) {
     $userId = (int)$_POST['user_id'];
-    $newRole = $_POST['new_role'];
+    $newUsername = trim($_POST['username']);
+    $newRole = $_POST['role'];
+    $newPassword = $_POST['password'];
 
-    // Prevent admin from changing their own role
-    if ($userId === (int)$_SESSION['user_id']) {
-        $message = "<p style='color:red;'>You cannot change your own role.</p>";
+    if ($userId === (int)$_SESSION['user_id'] && $newRole !== 'admin') {
+        $message = "<p style='color:red;'>You cannot demote yourself from admin.</p>";
+    } elseif (empty($newUsername)) {
+        $message = "<p style='color:red;'>Username cannot be empty.</p>";
+    } elseif (!in_array($newRole, ['admin', 'staff'])) {
+        $message = "<p style='color:red;'>Invalid role selected.</p>";
     } else {
-        $stmt = $conn->prepare("UPDATE users SET role = ? WHERE id = ?");
-        $stmt->bind_param("si", $newRole, $userId);
-        if ($stmt->execute()) {
-            $message = "<p style='color:green;'>User role updated successfully.</p>";
+        $check = $conn->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
+        $check->bind_param("si", $newUsername, $userId);
+        $check->execute();
+        $checkResult = $check->get_result();
+
+        if ($checkResult->fetch_assoc()) {
+            $message = "<p style='color:red;'>Username already taken.</p>";
         } else {
-            $message = "<p style='color:red;'>Error updating role: " . $conn->error . "</p>";
+            if (!empty($newPassword)) {
+                $passwordHash = password_hash($newPassword, PASSWORD_DEFAULT);
+                $stmt = $conn->prepare("UPDATE users SET username = ?, role = ?, password_hash = ? WHERE id = ?");
+                $stmt->bind_param("sssi", $newUsername, $newRole, $passwordHash, $userId);
+            } else {
+                $stmt = $conn->prepare("UPDATE users SET username = ?, role = ? WHERE id = ?");
+                $stmt->bind_param("ssi", $newUsername, $newRole, $userId);
+            }
+
+            if ($stmt->execute()) {
+                $message = "<p style='color:green;'>User updated successfully.</p>";
+            } else {
+                $message = "<p style='color:red;'>Error updating user: " . $conn->error . "</p>";
+            }
         }
     }
 }
@@ -30,7 +51,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_role'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
     $userId = (int)$_POST['user_id'];
 
-    // Prevent admin from deleting themselves
     if ($userId === (int)$_SESSION['user_id']) {
         $message = "<p style='color:red;'>You cannot delete your own account.</p>";
     } else {
@@ -44,16 +64,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
     }
 }
 
-// Get all users
-$result = $conn->query("SELECT id, username, email, role, created_at FROM users ORDER BY id ASC");
+// Get all users with product count
+$result = $conn->query("
+    SELECT 
+        u.id, 
+        u.username, 
+        u.email, 
+        u.role, 
+        u.created_at,
+        COUNT(p.product_id) AS product_count
+    FROM users u
+    LEFT JOIN products p ON u.id = p.added_by
+    GROUP BY u.id, u.username, u.email, u.role, u.created_at
+    ORDER BY u.id ASC
+");
+
 $users = [];
 $totalUsers = 0;
 $adminCount = 0;
 $staffCount = 0;
+$totalProductsAdded = 0;
 
 while ($row = $result->fetch_assoc()) {
     $users[] = $row;
     $totalUsers++;
+    $totalProductsAdded += $row['product_count'];
     if ($row['role'] === 'admin') {
         $adminCount++;
     } else {
@@ -80,7 +115,7 @@ while ($row = $result->fetch_assoc()) {
             background: #f5f5f5;
             padding: 15px;
             border-radius: 8px;
-            min-width: 180px;
+            min-width: 150px;
             text-align: center;
             flex: 1;
         }
@@ -88,19 +123,19 @@ while ($row = $result->fetch_assoc()) {
         .user-card h3 {
             margin: 0 0 10px 0;
             color: #3B2F2F;
-            font-size: 0.9em;
+            font-size: 0.85em;
         }
 
         .user-card h2 {
             margin: 0;
             color: #6F4E37;
-            font-size: 2em;
+            font-size: 1.8em;
         }
 
         .role-admin-badge {
             background: #f44336;
             color: white;
-            padding: 2px 10px;
+            padding: 3px 12px;
             border-radius: 12px;
             font-size: 0.75em;
             font-weight: bold;
@@ -110,7 +145,7 @@ while ($row = $result->fetch_assoc()) {
         .role-staff-badge {
             background: #b38c63;
             color: white;
-            padding: 2px 10px;
+            padding: 3px 12px;
             border-radius: 12px;
             font-size: 0.75em;
             font-weight: bold;
@@ -121,31 +156,13 @@ while ($row = $result->fetch_assoc()) {
             display: inline;
         }
 
-        .btn-toggle {
-            padding: 6px 14px;
-            background: #6F4E37;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.85em;
-            transition: background 0.2s;
-        }
 
-        .btn-toggle:hover {
+
+        .btn-edit:hover {
             background: #5a3f2d;
         }
 
-        .btn-delete-user {
-            padding: 6px 14px;
-            background: #f44336;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.85em;
-            transition: background 0.2s;
-        }
+
 
         .btn-delete-user:hover {
             background: #d32f2f;
@@ -191,6 +208,157 @@ while ($row = $result->fetch_assoc()) {
             text-align: center;
             margin: 10px 0;
         }
+
+        .product-count {
+            font-weight: bold;
+            color: #6F4E37;
+        }
+
+        .product-count-zero {
+            color: #999;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal h2 {
+            margin-top: 0;
+            margin-bottom: 24px;
+            color: #3B2F2F;
+        }
+
+        .modal-form-row {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .modal-field {
+            flex: 1;
+        }
+
+        .modal-field label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: #3B2F2F;
+            font-size: 14px;
+        }
+
+        .modal-field input,
+        .modal-field select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d4c4b0;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+            background: #fff;
+        }
+
+        .modal-field input:focus,
+        .modal-field select:focus {
+            outline: none;
+            border-color: #6F4E37;
+        }
+
+        .modal-field input::placeholder {
+            color: #aaa;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .modal-buttons button {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-save {
+            background: #6F4E37;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #5a3f2d;
+        }
+
+        .btn-cancel-modal {
+            background: #b38c63;
+            color: white;
+        }
+
+        .btn-cancel-modal:hover {
+            background: #9a7753;
+        }
+
+
+        .btn-edit,
+        .btn-delete-user {
+            padding: 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background 0.2s;
+            width: 70px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            vertical-align: middle;
+        }
+
+        .btn-edit {
+            background: #6F4E37;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #5a3f2d;
+        }
+
+        .btn-delete-user {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-delete-user:hover {
+            background: #d32f2f;
+        }
     </style>
 </head>
 
@@ -216,6 +384,10 @@ while ($row = $result->fetch_assoc()) {
                 <h3>Staff</h3>
                 <h2><?= $staffCount ?></h2>
             </div>
+            <div class="user-card">
+                <h3>Products Added</h3>
+                <h2><?= $totalProductsAdded ?></h2>
+            </div>
         </div>
 
         <table class="user-table">
@@ -224,7 +396,8 @@ while ($row = $result->fetch_assoc()) {
                 <th>Username</th>
                 <th>Email</th>
                 <th>Role</th>
-                <th>Created At</th>
+                <th>Products Added</th>
+                <th>Joined</th>
                 <th>Actions</th>
             </tr>
             <?php foreach ($users as $user): ?>
@@ -237,17 +410,18 @@ while ($row = $result->fetch_assoc()) {
                             <?= htmlspecialchars($user['role']) ?>
                         </span>
                     </td>
-                    <td><?= $user['created_at'] ?></td>
+                    <td class="<?= $user['product_count'] == 0 ? 'product-count-zero' : 'product-count' ?>">
+                        <?= $user['product_count'] ?>
+                    </td>
+                    <td><?= date('M j, Y', strtotime($user['created_at'])) ?></td>
                     <td>
                         <?php if ($user['id'] != $_SESSION['user_id']): ?>
-                            <form method="POST" class="actions-form" style="display: inline; margin-right: 5px;">
-                                <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
-                                <input type="hidden" name="new_role" value="<?= $user['role'] === 'admin' ? 'staff' : 'admin' ?>">
-                                <button type="submit" name="toggle_role" class="btn-toggle">
-                                    Make <?= $user['role'] === 'admin' ? 'Staff' : 'Admin' ?>
-                                </button>
-                            </form>
-                            <form method="POST" class="actions-form" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete user "<?= htmlspecialchars($user['username']) ?>"? This action cannot be undone.');">
+                            <button type="button" class="btn-edit" onclick="openEditModal(
+                                <?= $user['id'] ?>, 
+                                '<?= htmlspecialchars($user['username'], ENT_QUOTES) ?>', 
+                                '<?= $user['role'] ?>'
+                            )">Edit</button>
+                            <form method="POST" class="actions-form" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete user &quot;<?= htmlspecialchars($user['username']) ?>&quot;? This action cannot be undone.');">
                                 <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
                                 <button type="submit" name="delete_user" class="btn-delete-user">Delete</button>
                             </form>
@@ -259,6 +433,59 @@ while ($row = $result->fetch_assoc()) {
             <?php endforeach; ?>
         </table>
     </div>
+
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <h2>Edit User</h2>
+            <form method="POST">
+                <input type="hidden" name="user_id" id="editUserId">
+
+                <div class="modal-form-row">
+                    <div class="modal-field">
+                        <label>Username</label>
+                        <input type="text" name="username" id="editUsername" required>
+                    </div>
+
+                    <div class="modal-field">
+                        <label>Role</label>
+                        <select name="role" id="editRole" required>
+                            <option value="staff">Staff</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+
+                    <div class="modal-field">
+                        <label>Password</label>
+                        <input type="password" name="password" placeholder="blank to keep">
+                    </div>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="submit" name="edit_user" class="btn-save">Save Changes</button>
+                    <button type="button" class="btn-cancel-modal" onclick="closeEditModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openEditModal(id, username, role) {
+            document.getElementById('editUserId').value = id;
+            document.getElementById('editUsername').value = username;
+            document.getElementById('editRole').value = role;
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+    </script>
 
 </body>
 

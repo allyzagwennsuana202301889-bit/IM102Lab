@@ -21,9 +21,9 @@ $category = $_GET['category'] ?? '';
             <a href="index.php">Home</a>
             <a href="report.php">Reports</a>
             <?php if (isAdmin()): ?>
-                <a href="add.php">+ Add Product</a>
                 <a href="users.php">Users</a>
             <?php endif; ?>
+            <a href="add.php">+ Add Product</a>
             <div class="menu-divider"></div>
             <a href="logout.php">Logout</a>
         </div>
@@ -158,7 +158,7 @@ $category = $_GET['category'] ?? '';
         min-width: 180px;
         padding: 8px 0;
         z-index: 100;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
     .dropdown-menu.active {

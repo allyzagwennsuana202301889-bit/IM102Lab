@@ -15,13 +15,17 @@ SELECT
     p.price,
     p.stock,
     c.category_name,
-    s.supplier_name
+    s.supplier_name,
+    u.username AS added_by_name
 FROM products p
 JOIN categories c
     ON p.category_id = c.category_id
 JOIN suppliers s
     ON p.supplier_id = s.supplier_id
+LEFT JOIN users u                     
+    ON p.added_by = u.id
 WHERE 1=1
+
 ";
 
 if ($search != '') {
@@ -102,6 +106,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                 <th>Stock</th>
                 <th>Category</th>
                 <th>Supplier</th>
+                <th>Created By</th>
                 <?php if (isAdmin()): ?>
                     <th>Action</th>
                 <?php endif; ?>
@@ -116,6 +121,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                     <td><?= $row['stock'] ?></td>
                     <td><?= htmlspecialchars($row['category_name']) ?></td>
                     <td><?= htmlspecialchars($row['supplier_name']) ?></td>
+                    <td><?= htmlspecialchars($row['added_by_name'] ?? 'Unknown') ?></td>
 
                     <?php if (isAdmin()): ?>
                         <td>
